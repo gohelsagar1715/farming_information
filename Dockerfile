@@ -21,13 +21,13 @@ WORKDIR /app
 # Copy source code
 COPY . /app
 
-# Build WAR file
+# Build the WAR file
 RUN ant clean dist || true
 
-# Copy WAR to Tomcat webapps
-RUN cp dist/*.war $CATALINA_HOME/webapps/ROOT.war || true
+# Copy WAR file to Tomcat webapps as ROOT.war
+RUN cp dist/farming_information.war $CATALINA_HOME/webapps/ROOT.war || true
 
 EXPOSE 8080
 
-# Run Tomcat
+# Start Tomcat
 CMD ["catalina.sh", "run"]
