@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: farming-information
+    env: docker
+    buildCommand: ant clean dist
+    autoDeploy: true
