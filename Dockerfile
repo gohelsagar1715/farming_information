@@ -1,14 +1,22 @@
-# Use official Tomcat image with Java 17
-FROM tomcat:9.0-jdk17
+FROM eclipse-temurin:17-jdk
 
-# Set working directory
-WORKDIR /usr/local/tomcat
+RUN apt-get update && \
+    apt-get install -y wget ant unzip && \
+    wget https://downloads.apache.org/tomcat/tomcat-9/v9.0.92/bin/apache-tomcat-9.0.92.zip && \
+    unzip apache-tomcat-9.0.92.zip -d /opt && \
+    mv /opt/apache-tomcat-9.0.92 /opt/tomcat && \
+    rm apache-tomcat-9.0.92.zip
 
-# Copy built WAR from Ant output
-COPY dist/farming_information.war ./webapps/ROOT.war
+ENV CATALINA_HOME=/opt/tomcat
+ENV PATH="$CATALINA_HOME/bin:$PATH"
+WORKDIR /app
 
-# Expose Render default port
+COPY . /app
+
+RUN ant clean dist || true
+
+RUN cp dist/*.war $CATALINA_HOME/webapps/ROOT.war || true
+
 EXPOSE 8080
 
-# Start Tomcat server
 CMD ["catalina.sh", "run"]
