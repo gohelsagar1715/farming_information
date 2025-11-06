@@ -1,28 +1,26 @@
 FROM eclipse-temurin:17-jdk
 
-# Use safe mirrors and handle network issues
-RUN sed -i 's|deb.debian.org|archive.debian.org|g' /etc/apt/sources.list && \
-    sed -i 's|security.debian.org|archive.debian.org|g' /etc/apt/sources.list
+# Install basic tools
+RUN apt-get update && apt-get install -y wget ant unzip && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get clean && apt-get update -o Acquire::Check-Valid-Until=false -o Acquire::AllowInsecureRepositories=true && \
-    apt-get install -y wget ant unzip curl && \
-    rm -rf /var/lib/apt/lists/*
-
-# Download Tomcat with retry mechanism
+# Download Tomcat (from archive, since the latest version link moves)
 RUN mkdir -p /opt && \
-    (wget --tries=3 --timeout=30 https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.92/bin/apache-tomcat-9.0.92.zip \
-     || wget --tries=3 --timeout=30 https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.92/bin/apache-tomcat-9.0.92.zip) && \
-    unzip apache-tomcat-9.0.92.zip -d /opt && \
-    mv /opt/apache-tomcat-9.0.92 /opt/tomcat && \
-    rm apache-tomcat-9.0.92.zip
+    wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.82/bin/apache-tomcat-9.0.82.zip && \
+    unzip apache-tomcat-9.0.82.zip -d /opt && \
+    mv /opt/apache-tomcat-9.0.82 /opt/tomcat && \
+    rm apache-tomcat-9.0.82.zip
 
+# Set environment variables
 ENV CATALINA_HOME=/opt/tomcat
 ENV PATH="$CATALINA_HOME/bin:$PATH"
-WORKDIR /app
 
+WORKDIR /app
 COPY . /app
 
+# Build the WAR file
 RUN ant clean dist || true
+
+# Copy WAR to Tomcat webapps
 RUN cp dist/*.war $CATALINA_HOME/webapps/ROOT.war || true
 
 EXPOSE 8080
